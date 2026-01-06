@@ -1,0 +1,7 @@
+{
+  "name": "Copy of MIONJO - Gestion des Ressources en Eau",
+  "description": "Plateforme intégrée de monitoring et de gestion des points d'eau pour le Sud de Madagascar, incluant la maintenance prédictive, le suivi communautaire et l'analyse IA.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

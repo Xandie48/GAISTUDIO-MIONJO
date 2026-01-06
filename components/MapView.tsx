@@ -102,4 +102,97 @@ const MapView: React.FC<MapViewProps> = ({ filterStatus, setFilterStatus, filter
 
   return (
     <div className="h-full flex flex-col gap-6 animate-fadeIn">
-      <
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800">Vue Carte Interactive</h2>
+          <p className="text-slate-500">Localisation en temps réel des infrastructures MIONJO</p>
+        </div>
+        <div className="flex gap-2">
+           <div className="bg-white p-2 rounded-xl border border-slate-200 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="text-xs font-medium text-slate-600">Actif</span>
+           </div>
+           <div className="bg-white p-2 rounded-xl border border-slate-200 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+              <span className="text-xs font-medium text-slate-600">Maintenance</span>
+           </div>
+           <div className="bg-white p-2 rounded-xl border border-slate-200 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+              <span className="text-xs font-medium text-slate-600">Panne</span>
+           </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-[600px]">
+        {/* Sidebar Filters */}
+        <div className="lg:w-72 space-y-4">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <Filter size={18} className="text-cyan-600" />
+              Filtres
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Statut</label>
+                <select 
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 font-medium focus:ring-2 focus:ring-cyan-500/20 focus:outline-none"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="actif">Actif</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="panne">En panne</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Type d'infrastructure</label>
+                <select 
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 font-medium focus:ring-2 focus:ring-cyan-500/20 focus:outline-none"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="all">Tous les types</option>
+                  <option value="forage">Forage</option>
+                  <option value="puits">Puits</option>
+                  <option value="source">Source</option>
+                  <option value="borne_fontaine">Borne fontaine</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100">
+               <p className="text-[10px] text-slate-400 font-medium italic">
+                 Cliquez sur un marqueur pour afficher les détails du point d'eau.
+               </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-800 p-6 rounded-3xl text-white shadow-sm overflow-hidden relative">
+            <Layers className="absolute -right-4 -bottom-4 opacity-10" size={100} />
+            <h3 className="font-bold mb-2">Couches de données</h3>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" checked readOnly className="rounded border-white/20 bg-white/10" />
+                Zones de sécheresse
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" readOnly className="rounded border-white/20 bg-white/10" />
+                Densité de population
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Map Container */}
+        <div className="flex-1 relative bg-white rounded-[2rem] p-2 border border-slate-200 shadow-sm overflow-hidden">
+          <div ref={mapRef} className="w-full h-full"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MapView;

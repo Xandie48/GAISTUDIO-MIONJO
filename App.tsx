@@ -8,8 +8,11 @@ import MapView from './components/MapView';
 import FieldReports from './components/FieldReports';
 import Maintenance from './components/Maintenance';
 import Community from './components/Community';
+import UserManagement from './components/UserManagement';
+import Notifications from './components/Notifications';
 import Auth from './components/Auth';
-import { Droplet, X, Menu, Bell } from 'lucide-react';
+// Added missing Mail icon import
+import { Droplet, X, Menu, Bell, Mail } from 'lucide-react';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,6 +71,10 @@ const App: React.FC = () => {
         return <Maintenance />;
       case 'community':
         return <Community />;
+      case 'admin_users':
+        return <UserManagement />;
+      case 'notifications':
+        return <Notifications />;
       default:
         return (
           <div className="flex items-center justify-center h-[70vh] text-slate-400">
@@ -113,7 +120,10 @@ const App: React.FC = () => {
            </button>
            <h1 className="text-xl font-bold tracking-tight">MIONJO</h1>
         </div>
-        <button className="p-2 bg-white/10 rounded-full">
+        <button 
+          onClick={() => setActiveSection('notifications')}
+          className="p-2 bg-white/10 rounded-full"
+        >
           <Bell size={20} />
         </button>
       </header>
@@ -151,15 +161,18 @@ const App: React.FC = () => {
 
       {/* Global Notifications Toast */}
       <div className="fixed bottom-6 right-6 z-[9999] hidden md:block">
-        <div className="bg-white shadow-2xl rounded-[1.5rem] p-4 border border-slate-100 flex items-center gap-4 max-w-sm animate-fadeIn">
-           <div className="p-2.5 bg-orange-100 text-orange-600 rounded-2xl shrink-0">
-             <Droplet size={20} />
+        <button 
+          onClick={() => setActiveSection('notifications')}
+          className="bg-white shadow-2xl rounded-[1.5rem] p-4 border border-slate-100 flex items-center gap-4 max-w-sm animate-fadeIn hover:bg-slate-50 transition-colors text-left"
+        >
+           <div className="p-2.5 bg-cyan-100 text-cyan-600 rounded-2xl shrink-0">
+             <Mail size={20} />
            </div>
            <div>
-             <p className="text-sm font-bold text-slate-800">Alerte Réseau</p>
-             <p className="text-xs text-slate-500 leading-tight">Nouveau signalement de fuite détecté à Ambovombe.</p>
+             <p className="text-sm font-bold text-slate-800">Journal des Emails</p>
+             <p className="text-xs text-slate-500 leading-tight">Consultez l'historique des notifications critiques envoyées par email.</p>
            </div>
-        </div>
+        </button>
       </div>
     </div>
   );

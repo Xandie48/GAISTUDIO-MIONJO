@@ -9,9 +9,11 @@ import {
   BrainCircuit,
   Calendar,
   ChevronRight,
-  FilterX
+  FilterX,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, AreaChart, Area } from 'recharts';
 import { mockWaterPoints, mockFieldReports, mockMaintenanceRecords, mockAIPredictions } from '../mockData';
 
 interface DashboardProps {
@@ -21,7 +23,6 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ filterStatus, filterType, onResetFilters }) => {
-  // Apply global filters to mockWaterPoints
   const filteredPoints = mockWaterPoints.filter(p => {
     const statusMatch = filterStatus === 'all' || p.status === filterStatus;
     const typeMatch = filterType === 'all' || p.type === filterType;
@@ -32,230 +33,168 @@ const Dashboard: React.FC<DashboardProps> = ({ filterStatus, filterType, onReset
   const maintenancePoints = filteredPoints.filter(p => p.status === 'maintenance').length;
   const pannePoints = filteredPoints.filter(p => p.status === 'panne').length;
   const totalPoints = filteredPoints.length;
-  const totalPopulation = filteredPoints.reduce((acc, p) => acc + p.population_served, 0);
   
-  // Top 5 Urgent Reports (still showing globally or maybe filtered by point context)
-  const urgentReports = [...mockFieldReports]
-    .sort((a, b) => {
-      const priorityOrder = { critique: 0, haute: 1, normale: 2, basse: 3 };
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    })
-    .slice(0, 5);
-
-  // Top 5 Upcoming Maintenance
-  const upcomingMaintenance = [...mockMaintenanceRecords]
-    .filter(m => m.status === 'planifié')
-    .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
-    .slice(0, 5);
-
-  // Recent AI Predictions Summary
-  const recentPredictions = [...mockAIPredictions]
-    .sort((a, b) => {
-      const riskOrder = { critique: 0, élevé: 1, moyen: 2, faible: 3 };
-      return riskOrder[a.risk_level] - riskOrder[b.risk_level];
-    })
-    .slice(0, 3);
+  // Fake production data for the chart
+  const productionHistory = [
+    { day: 'Lun', liters: 4200 },
+    { day: 'Mar', liters: 4800 },
+    { day: 'Mer', liters: 4500 },
+    { day: 'Jeu', liters: 5100 },
+    { day: 'Ven', liters: 4900 },
+    { day: 'Sam', liters: 3800 },
+    { day: 'Dim', liters: 4100 },
+  ];
 
   const statusData = [
-    { name: 'Actifs', value: activePoints, color: '#10b981' },
+    { name: 'Actifs', value: activePoints, color: '#06b6d4' },
     { name: 'Maintenance', value: maintenancePoints, color: '#f59e0b' },
     { name: 'En panne', value: pannePoints, color: '#ef4444' },
-    { name: 'Inactifs', value: Math.max(0, totalPoints - (activePoints + maintenancePoints + pannePoints)), color: '#94a3b8' },
+    { name: 'Inactifs', value: Math.max(0, totalPoints - (activePoints + maintenancePoints + pannePoints)), color: '#cbd5e1' },
   ];
+
+  const urgentReports = [...mockFieldReports].sort((a, b) => a.priority === 'critique' ? -1 : 1).slice(0, 4);
 
   const hasFilters = filterStatus !== 'all' || filterType !== 'all';
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-12">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 animate-fadeIn pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800">Tableau de bord</h2>
-          <p className="text-slate-500">
-            {hasFilters 
-              ? `Analyse filtrée (${filterType !== 'all' ? filterType : 'tous types'}, ${filterStatus !== 'all' ? filterStatus : 'tous statuts'})` 
-              : "Vue d'ensemble des ressources en eau - Sud Madagascar"}
+          <h2 className="text-4xl font-black text-slate-800 tracking-tight">Récapitulatif</h2>
+          <p className="text-slate-500 font-medium text-lg">
+            {hasFilters ? "Vue filtrée du réseau" : "Performance du réseau MIONJO"}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs font-medium text-slate-400 flex items-center justify-end gap-1">
-            <Clock size={12} />
-            Dernière mise à jour: {new Date().toLocaleString('fr-FR')}
-          </p>
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+          <div className="p-2 bg-cyan-50 text-cyan-600 rounded-xl">
+            <Activity size={18} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">Système</p>
+            <p className="text-sm font-bold text-slate-700 leading-none">Optimal (98.2%)</p>
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Cards with Premium Style */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Points d'eau" 
+          title="Infrastructures" 
           value={totalPoints} 
-          subtitle={hasFilters ? "Infrastructures filtrées" : "Infrastructures gérées"} 
+          subtitle="Total points d'eau" 
           icon={Droplets} 
           color="cyan" 
-          isHighlighted={hasFilters}
+          trend="+2 ce mois"
         />
-        <StatCard title="Points Actifs" value={activePoints} subtitle={totalPoints > 0 ? `${((activePoints/totalPoints)*100).toFixed(0)}% de la sélection` : '0%'} icon={Users} color="blue" />
-        <StatCard title="En Maintenance" value={maintenancePoints} subtitle="Interventions en cours" icon={Wrench} color="amber" />
-        <StatCard title="En Panne" value={pannePoints} subtitle="Action immédiate requise" icon={AlertTriangle} color="red" />
+        <StatCard title="Opérationnels" value={activePoints} subtitle="En service" icon={Users} color="blue" trend="Stable" />
+        <StatCard title="Alertes" value={pannePoints} subtitle="Urgence technique" icon={AlertTriangle} color="red" trend="-15% vs hier" />
+        <StatCard title="IA Insight" value="94%" subtitle="Précision modèle" icon={BrainCircuit} color="indigo" trend="Amélioré" />
       </div>
 
-      {totalPoints === 0 && (
-        <div className="bg-white p-12 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
-          <FilterX size={48} className="text-slate-300 mb-4" />
-          <h3 className="text-lg font-bold text-slate-600 mb-1">Aucun point d'eau ne correspond aux filtres</h3>
-          <p className="text-slate-400 mb-6 max-w-sm">Ajustez vos filtres dans la vue carte pour afficher les statistiques correspondantes.</p>
-          <button 
-            onClick={onResetFilters}
-            className="px-6 py-2 bg-[#0e7490] text-white rounded-xl font-bold hover:bg-[#0891b2] transition-colors"
-          >
-            Réinitialiser les filtres
+      {totalPoints === 0 ? (
+        <div className="bg-white p-12 rounded-[3rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+          <FilterX size={60} className="text-slate-200 mb-6" />
+          <h3 className="text-xl font-bold text-slate-600 mb-2">Aucun résultat</h3>
+          <p className="text-slate-400 mb-8 max-w-sm font-medium">Réinitialisez les filtres pour voir les statistiques globales.</p>
+          <button onClick={onResetFilters} className="px-10 py-3 bg-[#0e7490] text-white rounded-2xl font-bold hover:bg-[#0891b2] shadow-xl shadow-cyan-900/20">
+            Tout afficher
           </button>
         </div>
-      )}
-
-      {totalPoints > 0 && (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Urgent Reports Widget */}
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                  <AlertTriangle size={20} className="text-red-500" />
-                  Signalements Urgents (Top 5)
-                </h3>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Production Chart */}
+          <div className="lg:col-span-2 bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-cyan-50 text-cyan-600 rounded-2xl">
+                  <TrendingUp size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Production (Liters)</h3>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">7 derniers jours</p>
+                </div>
               </div>
-              <div className="divide-y divide-slate-50">
-                {urgentReports.map(report => (
-                  <div key={report.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-2 h-10 rounded-full ${report.priority === 'critique' ? 'bg-red-500' : 'bg-orange-500'}`}></div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{report.title}</p>
-                        <p className="text-xs text-slate-500 line-clamp-1">{report.description}</p>
-                      </div>
+              <div className="text-right">
+                <p className="text-2xl font-black text-slate-800">31.9k</p>
+                <p className="text-[10px] font-bold text-green-500">+4.2% hebdomadaire</p>
+              </div>
+            </div>
+            
+            <div className="flex-1 min-h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={productionHistory}>
+                  <defs>
+                    <linearGradient id="colorLiters" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 700}} dy={10} />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px'}}
+                    itemStyle={{fontWeight: 800, color: '#0e7490'}}
+                    cursor={{stroke: '#0e7490', strokeWidth: 2}}
+                  />
+                  <Area type="monotone" dataKey="liters" stroke="#0e7490" strokeWidth={4} fillOpacity={1} fill="url(#colorLiters)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Right Column: Status & Alerts */}
+          <div className="space-y-8">
+            <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100">
+              <h3 className="text-xl font-bold text-slate-800 mb-6">Répartition Réseau</h3>
+              <div className="h-48 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={8} dataKey="value">
+                      {statusData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <p className="text-2xl font-black text-slate-800 leading-none">{totalPoints}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total</p>
+                </div>
+              </div>
+              <div className="mt-6 space-y-3">
+                {statusData.map(d => (
+                  <div key={d.name} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full" style={{backgroundColor: d.color}}></div>
+                      <span className="text-xs font-bold text-slate-500 group-hover:text-slate-800 transition-colors">{d.name}</span>
                     </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        report.priority === 'critique' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
-                      }`}>
-                        {report.priority}
-                      </span>
-                      <p className="text-[10px] text-slate-400 mt-1">{report.created_at}</p>
-                    </div>
+                    <span className="text-sm font-black text-slate-700">{d.value}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* AI Predictions Summary */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-6 flex items-center gap-2">
-                <BrainCircuit size={20} className="text-cyan-600" />
-                Résumé Prédictions IA
-              </h3>
-              <div className="space-y-4">
-                {recentPredictions.map(pred => {
-                  const wp = mockWaterPoints.find(p => p.id === pred.water_point_id);
-                  return (
-                    <div key={pred.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-xs font-bold text-slate-700 truncate">{wp?.name}</p>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          pred.risk_level === 'élevé' || pred.risk_level === 'critique' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-                        }`}>
-                          {pred.risk_level}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 leading-tight">{pred.recommendation}</p>
-                      <div className="mt-2 flex items-center gap-1">
-                        <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500" style={{ width: `${pred.confidence_score}%` }}></div>
-                        </div>
-                        <span className="text-[10px] font-medium text-slate-400">{pred.confidence_score}%</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-xl relative overflow-hidden group">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 transition-transform group-hover:scale-110"></div>
+               <h3 className="text-lg font-bold mb-5 flex items-center gap-3 relative z-10">
+                 <AlertTriangle size={20} className="text-red-400" />
+                 Alertes Critiques
+               </h3>
+               <div className="space-y-4 relative z-10">
+                 {urgentReports.slice(0, 2).map(r => (
+                   <div key={r.id} className="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer">
+                     <p className="text-xs font-black uppercase text-red-400 mb-1">{r.priority}</p>
+                     <p className="text-sm font-bold text-white mb-1 line-clamp-1">{r.title}</p>
+                     <p className="text-[10px] text-slate-400 font-medium">{r.created_at}</p>
+                   </div>
+                 ))}
+               </div>
+               <button className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                 Gérer les incidents
+               </button>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Status Distribution Chart */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-800 mb-6 flex items-center gap-2">
-                <Droplets size={20} className="text-cyan-600" />
-                Répartition par Statut
-              </h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                      {statusData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                   {statusData.map(d => (
-                     <div key={d.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }}></div>
-                        <span className="text-[10px] text-slate-600 font-medium truncate">{d.name}: {d.value}</span>
-                     </div>
-                   ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Upcoming Maintenance Widget */}
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                  <Calendar size={20} className="text-blue-500" />
-                  Prochaines Maintenances
-                </h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                    <tr>
-                      <th className="px-6 py-3">Point d'eau</th>
-                      <th className="px-6 py-3">Type</th>
-                      <th className="px-6 py-3">Priorité</th>
-                      <th className="px-6 py-3">Date Prévue</th>
-                      <th className="px-6 py-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {upcomingMaintenance.map(m => {
-                      const wp = mockWaterPoints.find(p => p.id === m.water_point_id);
-                      return (
-                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-700">{wp?.name}</td>
-                          <td className="px-6 py-4 text-sm text-slate-500 capitalize">{m.maintenance_type}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              m.priority === 'critique' ? 'bg-red-100 text-red-600' : 
-                              m.priority === 'haute' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
-                            }`}>
-                              {m.priority}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-500 font-medium">{m.scheduled_date}</td>
-                          <td className="px-6 py-4 text-right">
-                            <button className="p-1 hover:bg-slate-200 rounded text-slate-400">
-                              <ChevronRight size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -266,29 +205,34 @@ interface StatCardProps {
   value: string | number;
   subtitle: string;
   icon: React.ElementType;
-  color: 'cyan' | 'blue' | 'red' | 'amber';
-  isHighlighted?: boolean;
+  color: string;
+  trend: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon: Icon, color, isHighlighted }) => {
-  const colorMap = {
+const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon: Icon, color, trend }) => {
+  const colors = {
     cyan: 'bg-cyan-50 text-cyan-600 border-cyan-100',
     blue: 'bg-blue-50 text-blue-600 border-blue-100',
     red: 'bg-red-50 text-red-600 border-red-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100',
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
   };
 
   return (
-    <div className={`p-6 rounded-2xl border bg-white shadow-sm hover:shadow-md transition-all ${isHighlighted ? 'ring-2 ring-cyan-500 ring-offset-2' : ''}`}>
-      <div className="flex items-start justify-between">
-        <div className="overflow-hidden">
-          <p className="text-sm font-medium text-slate-500 mb-1 truncate">{title}</p>
-          <h4 className="text-3xl font-bold text-slate-800 mb-1">{value}</h4>
-          <p className="text-xs text-slate-400 truncate">{subtitle}</p>
-        </div>
-        <div className={`p-3 rounded-xl flex-shrink-0 ${colorMap[color]}`}>
+    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+      <div className="flex items-start justify-between mb-6">
+        <div className={`p-4 rounded-2xl transition-transform group-hover:rotate-12 ${colors[color as keyof typeof colors]}`}>
           <Icon size={24} />
         </div>
+        <div className="text-right">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{title}</p>
+          <h4 className="text-3xl font-black text-slate-800 leading-none">{value}</h4>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-bold text-slate-600 mb-1">{subtitle}</p>
+        <p className={`text-[10px] font-black uppercase tracking-tight ${trend.includes('-') ? 'text-red-500' : 'text-green-500'}`}>
+          {trend}
+        </p>
       </div>
     </div>
   );

@@ -10,7 +10,9 @@ import {
   Users, 
   LogOut,
   Droplet,
-  X
+  X,
+  Settings,
+  Mail
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onNavigate, isOpen, on
     { id: 'maintenance', label: 'Maintenance', icon: Wrench },
     { id: 'ai', label: 'Prédictions IA', icon: BrainCircuit },
     { id: 'community', label: 'Communauté', icon: Users },
+    { id: 'notifications', label: 'Journal Emails', icon: Mail },
   ];
 
   const sidebarClasses = `
@@ -83,16 +86,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onNavigate, isOpen, on
           </ul>
         </nav>
 
-        <div className="p-6 border-t border-white/10">
-          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl mb-4">
-            <div className="w-10 h-10 rounded-full bg-cyan-400 flex items-center justify-center text-[#0e7490] font-extrabold shadow-inner">
+        <div className="p-4 border-t border-white/10">
+          <button 
+            onClick={() => {
+              onNavigate('admin_users');
+              if (window.innerWidth < 1024) onToggle();
+            }}
+            className={`w-full flex items-center gap-3 p-3 rounded-2xl mb-4 transition-all text-left group ${
+              activeSection === 'admin_users' ? 'bg-cyan-600 shadow-inner' : 'bg-white/5 hover:bg-white/10'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-full bg-cyan-400 flex items-center justify-center text-[#0e7490] font-extrabold shadow-inner shrink-0">
               AD
             </div>
-            <div className="overflow-hidden">
+            <div className="overflow-hidden flex-1">
               <p className="text-sm font-bold truncate">Admin Mionjo</p>
-              <p className="text-[10px] text-white/50 truncate uppercase tracking-widest font-bold">Manager</p>
+              <p className="text-[10px] text-white/50 truncate uppercase tracking-widest font-bold">Gérer le compte</p>
             </div>
-          </div>
+            <Settings size={16} className={`text-white/30 group-hover:rotate-90 transition-transform ${activeSection === 'admin_users' ? 'text-white' : ''}`} />
+          </button>
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/70 hover:bg-red-500/20 hover:text-red-100 transition-all text-sm font-bold"

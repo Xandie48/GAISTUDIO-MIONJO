@@ -1,5 +1,4 @@
 
-
 export type UserRole = 'admin' | 'ong' | 'technicien' | 'communaute';
 
 export interface User {
@@ -55,7 +54,6 @@ export interface MaintenanceRecord {
 export interface FieldReport {
   id: string;
   water_point_id: string;
-  // Fix: Added 'fuite' to the union type to accommodate leak reports used in field data
   report_type: 'panne' | 'qualité_eau' | 'accès_difficile' | 'vandalisme' | 'tarissement' | 'fuite';
   priority: 'basse' | 'normale' | 'haute' | 'critique';
   status: 'nouveau' | 'en_cours' | 'résolu';
@@ -81,4 +79,15 @@ export interface CommunityPost {
   post_type: 'info' | 'question' | 'succès' | 'alerte';
   likes_count: number;
   created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  recipient: string;
+  subject: string;
+  content: string;
+  type: 'email' | 'system';
+  priority: 'basse' | 'normale' | 'haute' | 'critique';
+  timestamp: string;
+  is_read: boolean;
 }

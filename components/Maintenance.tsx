@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 // Added BrainCircuit to the icons imported from lucide-react
 import { Wrench, Calendar, CheckCircle2, AlertTriangle, User, ExternalLink, Plus, X, Save, Clock, BrainCircuit } from 'lucide-react';
 import { mockMaintenanceRecords, mockWaterPoints } from '../mockData';
+import { api } from '../services/api';
 
 const Maintenance: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
@@ -10,6 +11,24 @@ const Maintenance: React.FC = () => {
 
   const handleSchedule = (e: React.FormEvent) => {
     e.preventDefault();
+    const target = e.target as any;
+    const waterPointId = target[0].value;
+    const type = target[1].value;
+    const date = target[2].value;
+    const priority = target[3].value;
+    const description = target[4].value;
+
+    const wp = mockWaterPoints.find(p => p.id === waterPointId);
+
+    // Send notification email to technicians
+    api.sendNotification({
+      recipient: 'technicien-equipe-A@mionjo.mg',
+      subject: `NOUVELLE MAINTENANCE: ${wp?.name || 'Inconnu'} (${type})`,
+      content: `Une intervention de type ${type} a été planifiée pour le ${date}. Priorité: ${priority}. Description: ${description}.`,
+      type: 'email',
+      priority: priority as any
+    });
+
     setIsSuccess(true);
     setTimeout(() => {
       setIsSuccess(false);
@@ -175,7 +194,7 @@ const Maintenance: React.FC = () => {
                     <CheckCircle2 size={40} />
                   </div>
                   <h4 className="text-2xl font-bold text-slate-800">Intervention planifiée !</h4>
-                  <p className="text-slate-500 max-w-xs mx-auto">L'équipe technique a été notifiée et l'intervention est désormais visible dans le planning.</p>
+                  <p className="text-slate-500 max-w-xs mx-auto">L'équipe technique a été notifiée par email et l'intervention est désormais visible dans le planning.</p>
                 </div>
               ) : (
                 <>
